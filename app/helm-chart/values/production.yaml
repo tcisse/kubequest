@@ -1,0 +1,25 @@
+# Overrides pour l'environnement production
+app:
+  replicaCount: 3
+  image:
+    pullPolicy: Always
+  env:
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_URL: "https://app.kubequest.local"
+
+autoscaling:
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+mysql:
+  primary:
+    persistence:
+      size: 20Gi
+
+ingress:
+  tls:
+    - secretName: app-tls
+      hosts:
+        - app.kubequest.local

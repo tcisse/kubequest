@@ -1,0 +1,56 @@
+# Dex — OpenID Connect Identity Provider
+# https://dexidp.io/
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+config:
+  issuer: http://dex.kubequest.local
+
+  storage:
+    type: kubernetes
+    config:
+      inCluster: true
+
+  web:
+    http: 0.0.0.0:5556
+
+  # Connecteur statique (utilisateurs locaux pour la demo)
+  staticClients:
+    - id: oauth2-proxy
+      name: "OAuth2 Proxy"
+      secret: kubequest-oauth2-secret
+      redirectURIs:
+        - "http://grafana.kubequest.local/oauth2/callback"
+        - "http://dashboard.kubequest.local/oauth2/callback"
+        - "http://app.kubequest.local/oauth2/callback"
+
+  # Utilisateurs de demo
+  enablePasswordDB: true
+  staticPasswords:
+    - email: "admin@kubequest.local"
+      # bcrypt hash de "kubequest-admin"
+      hash: "$2a$12$4K/VkmDd1pr1Mvbbpe/S5OvUdJlAzDewyePWgqEhiqAAAChovwxS2"
+      username: "admin"
+      userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+    - email: "viewer@kubequest.local"
+      # bcrypt hash de "kubequest-viewer"
+      hash: "$2a$12$4K/VkmDd1pr1Mvbbpe/S5OvUdJlAzDewyePWgqEhiqAAAChovwxS2"
+      username: "viewer"
+      userID: "41331323-6f44-45e6-b3b9-2c4b60c02be5"
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: dex.kubequest.local
+      paths:
+        - path: /
+          pathType: Prefix

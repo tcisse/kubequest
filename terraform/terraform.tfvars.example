@@ -1,0 +1,13 @@
+# Copier en terraform.tfvars et remplir les IDs de tes instances
+# Pour les trouver :
+#   aws ec2 describe-instances --region eu-west-1 \
+#     --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value|[0]]' \
+#     --output table
+
+aws_region             = "eu-west-1"
+ssh_private_key_path   = "~/.ssh/kubequest.pem"
+
+instance_id_kube1      = "i-0xxxxxxxxxxxxxxxxx"
+instance_id_kube2      = "i-0xxxxxxxxxxxxxxxxx"
+instance_id_ingress    = "i-0xxxxxxxxxxxxxxxxx"
+instance_id_monitoring = "i-0xxxxxxxxxxxxxxxxx"

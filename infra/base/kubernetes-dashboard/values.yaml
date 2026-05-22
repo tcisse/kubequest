@@ -1,0 +1,46 @@
+app:
+  mode: 'dashboard'
+
+  scheduling:
+    nodeSelector:
+      node-role: monitoring
+
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: monitoring
+      effect: NoSchedule
+
+  ingress:
+    enabled: true
+    hosts:
+      - dashboard.kubequest.local
+    ingressClassName: nginx
+    useDefaultAnnotations: false
+    useDefaultIngressClass: false
+    pathType: ImplementationSpecific
+    path: /
+    issuer:
+      scope: disabled
+    tls:
+      enabled: true
+      secretName: dashboard-tls   # cert auto-signé
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.auth.svc.cluster.local/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "http://dex.kubequest.local/auth?client_id=oauth2-proxy&redirect_uri=http://dashboard.kubequest.local/oauth2/callback&response_type=code&scope=openid+email+profile"
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 250m
+      memory: 400Mi
+
+kong:
+  proxy:
+    http:
+      enabled: true

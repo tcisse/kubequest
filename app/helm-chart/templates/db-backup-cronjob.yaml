@@ -1,0 +1,77 @@
+{{- if .Values.mysql.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kubequest-app.fullname" . }}-db-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubequest-app.labels" . | nindent 4 }}
+spec:
+  schedule: "0 2 * * *"   # Chaque nuit à 2h00
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "kubequest-app.selectorLabels" . | nindent 12 }}
+            component: db-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: db-backup
+              image: mysql:8.0
+              command:
+                - sh
+                - -c
+                - |
+                  BACKUP_FILE="/backup/$(date +%Y%m%d_%H%M%S)_dump.sql"
+                  mysqldump \
+                    -h {{ .Release.Name }}-mysql \
+                    -u $DB_USERNAME \
+                    -p$DB_PASSWORD \
+                    $DB_DATABASE > $BACKUP_FILE
+                  echo "Backup saved: $BACKUP_FILE"
+                  # Supprimer les backups > 7 jours
+                  find /backup -name "*.sql" -mtime +7 -delete
+              env:
+                - name: DB_DATABASE
+                  value: {{ .Values.mysql.auth.database | quote }}
+                - name: DB_USERNAME
+                  value: {{ .Values.mysql.auth.username | quote }}
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "kubequest-app.secretName" . }}
+                      key: DB_PASSWORD
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: {{ include "kubequest-app.fullname" . }}-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kubequest-app.fullname" . }}-backup-pvc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubequest-app.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+{{- end }}

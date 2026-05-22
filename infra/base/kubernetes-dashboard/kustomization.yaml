@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kubernetes-dashboard
+
+helmCharts:
+  - name: kubernetes-dashboard
+    repo: https://wenerme.github.io/charts
+    version: "7.3.2"
+    releaseName: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+    valuesFile: values.yaml
+
+resources:
+  - namespace.yaml
+  - admin-serviceaccount.yaml

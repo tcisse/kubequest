@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubequest
+  labels:
+    app.kubernetes.io/part-of: kubequest
+    project: kubequest

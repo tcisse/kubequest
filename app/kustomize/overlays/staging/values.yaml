@@ -1,0 +1,109 @@
+# ─── Application — Staging ────────────────────────────────────────────────────
+app:
+  name: kubequest-app
+  image:
+    repository: cissetaher/kubequest-app
+    tag: "latest"
+    pullPolicy: Always
+
+  replicaCount: 1
+
+  env:
+    APP_ENV: staging
+    APP_DEBUG: "true"
+    APP_URL: "http://app.staging.kubequest.local"
+    DB_CONNECTION: mysql
+    DB_PORT: "3306"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 3
+
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - kubequest-app
+          topologyKey: kubernetes.io/hostname
+
+# ─── Service ──────────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# ─── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  host: app.staging.kubequest.local
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  tls: []
+
+# ─── HPA — Autoscaling (reduit en staging) ───────────────────────────────────
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ─── Secrets (valeurs de demo) ────────────────────────────────────────────────
+secrets:
+  appKey: "base64:DJYTvaRkEZ/YcQsX3TMpB0iCjgme2rhlIOus9A1hnj4="
+  dbPassword: "app_password"
+  dbRootPassword: "app_root_password"
+
+# ─── MySQL (chart Bitnami) ────────────────────────────────────────────────────
+mysql:
+  enabled: true
+  auth:
+    database: app_database
+    username: app_user
+    existingSecret: kubequest-app-secrets
+
+  primary:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    persistence:
+      enabled: true
+      size: 2Gi
+
+  backup:
+    enabled: true
+
+# ─── Labels standardises ─────────────────────────────────────────────────────
+commonLabels:
+  project: kubequest
+  managed-by: helm

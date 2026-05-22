@@ -1,0 +1,16 @@
+# Overrides pour l'environnement staging
+app:
+  replicaCount: 1
+  env:
+    APP_ENV: staging
+    APP_DEBUG: "true"
+    APP_URL: "http://app.staging.kubequest.local"
+
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 3
+
+mysql:
+  primary:
+    persistence:
+      size: 2Gi

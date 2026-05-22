@@ -1,0 +1,91 @@
+# Tolération commune pour tous les composants monitoring
+# sur le nœud dédié (taint: dedicated=monitoring:NoSchedule)
+_monitoringToleration: &monitoringToleration
+  - key: "dedicated"
+    operator: "Equal"
+    value: "monitoring"
+    effect: "NoSchedule"
+
+_monitoringNodeSelector: &monitoringNodeSelector
+  node-role: monitoring
+
+grafana:
+  enabled: true
+  nodeSelector: *monitoringNodeSelector
+  tolerations: *monitoringToleration
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.kubequest.local
+    annotations:
+      nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.auth.svc.cluster.local/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "http://dex.kubequest.local/auth?client_id=oauth2-proxy&redirect_uri=http://grafana.kubequest.local/oauth2/callback&response_type=code&scope=openid+email+profile"
+  adminPassword: "changeme-in-secret"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Datasource Loki auto-configurée
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki-stack:3100
+      access: proxy
+      isDefault: false
+
+prometheus:
+  prometheusSpec:
+    nodeSelector: *monitoringNodeSelector
+    tolerations: *monitoringToleration
+    retention: 15d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  alertmanagerSpec:
+    nodeSelector: *monitoringNodeSelector
+    tolerations: *monitoringToleration
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+# Règles d'alerte personnalisées
+additionalPrometheusRulesMap:
+  kubequest-alerts:
+    groups:
+      - name: kubequest
+        rules:
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total[5m]) > 0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} crash looping"
+          - alert: HighMemoryUsage
+            expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Container {{ $labels.container }} memory > 90%"

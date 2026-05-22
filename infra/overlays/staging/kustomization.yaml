@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+commonLabels:
+  environment: staging
+
+patches:
+  # Réduire les replicas nginx en staging
+  - target:
+      kind: HelmChart
+      name: ingress-nginx
+    patch: |-
+      - op: replace
+        path: /spec/values/controller/replicaCount
+        value: 1

@@ -1,0 +1,35 @@
+# Tokens et credentials
+token-*.txt
+*.pem
+
+# Secrets Terraform
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Secrets K8s générés localement
+**/secrets.yaml
+**/*-secret.yaml
+!**/secret.yaml.example
+
+# Kubeconfig
+kubeconfig
+*.kubeconfig
+.kube/
+
+# Helm dependencies
+**/charts/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

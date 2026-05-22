@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubequest-app.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubequest-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.app.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kubequest-app.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime deployment
+  template:
+    metadata:
+      labels:
+        {{- include "kubequest-app.labels" . | nindent 8 }}
+      annotations:
+        # Force redéploiement si le secret change
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          {{- toYaml .Values.app.podAntiAffinity | nindent 10 }}
+
+      # Attendre que MySQL soit prêt avant de démarrer
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z {{ .Release.Name }}-mysql 3306; do
+                echo "Waiting for MySQL..."; sleep 3
+              done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+
+      containers:
+        - name: app
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+
+          # Variables non-sensibles
+          env:
+            {{- range $key, $value := .Values.app.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-mysql"
+            - name: DB_DATABASE
+              value: {{ .Values.mysql.auth.database | quote }}
+            - name: DB_USERNAME
+              value: {{ .Values.mysql.auth.username | quote }}
+
+          # Variables sensibles depuis le Secret
+          envFrom:
+            - secretRef:
+                name: {{ include "kubequest-app.secretName" . }}
+
+          livenessProbe:
+            {{- toYaml .Values.app.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.app.readinessProbe | nindent 12 }}
+
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}

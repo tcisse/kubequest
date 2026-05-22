@@ -1,0 +1,32 @@
+# OPA Gatekeeper — Validating Webhook
+# https://open-policy-agent.github.io/gatekeeper
+
+replicas: 1
+
+audit:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+controllerManager:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Exempter les namespaces systeme de la validation
+exemptNamespaces:
+  - kube-system
+  - gatekeeper-system
+  - monitoring
+  - ingress-nginx
+  - kubernetes-dashboard
+  - auth

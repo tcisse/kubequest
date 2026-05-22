@@ -1,0 +1,39 @@
+# oauth2-proxy — Reverse proxy d'authentification
+# Protege l'acces aux outils (Grafana, Dashboard)
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+config:
+  clientID: "oauth2-proxy"
+  clientSecret: "kubequest-oauth2-secret"
+  cookieSecret: "T0FVVEgyLVBST1hZLVNFQ1JFVA=="
+
+extraArgs:
+  provider: "oidc"
+  oidc-issuer-url: "http://dex.kubequest.local"
+  redirect-url: "http://grafana.kubequest.local/oauth2/callback"
+  email-domain: "*"
+  cookie-secure: "false"
+  upstream: "static://200"
+  skip-provider-button: "true"
+  pass-access-token: "true"
+  pass-authorization-header: "true"
+  set-authorization-header: "true"
+  set-xauthrequest: "true"
+  cookie-name: "_kubequest_oauth2"
+
+ingress:
+  enabled: true
+  className: nginx
+  pathType: Prefix
+  hosts:
+    - grafana.kubequest.local
+  path: /oauth2

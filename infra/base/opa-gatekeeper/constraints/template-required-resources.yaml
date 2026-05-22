@@ -1,0 +1,34 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredresources
+  annotations:
+    description: "Require resource limits and requests on containers"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredResources
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requiredFields:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredresources
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          field := input.parameters.requiredFields[_]
+          not has_field(container.resources, field)
+          msg := sprintf("Container '%v' in Pod '%v' must define resources.%v", [container.name, input.review.object.metadata.name, field])
+        }
+
+        has_field(obj, field) {
+          _ = obj[field]
+        }
