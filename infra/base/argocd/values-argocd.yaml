@@ -12,16 +12,9 @@ server:
   ingress:
     enabled: true
     ingressClassName: nginx
-    annotations:
-      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     hosts:
       - argocd.kubequest.local
     tls: []
-
-  # Desactiver TLS interne pour simplifier (nginx gere le SSL termination)
-  extraArgs:
-    - --insecure
 
   resources:
     requests:
@@ -105,4 +98,4 @@ configs:
 
   secret:
     # Mot de passe admin ArgoCD (bcrypt de "kubequest-admin")
-    argocdServerAdminPassword: "$2a$12$4K/VkmDd1pr1Mvbbpe/S5OvUdJlAzDewyePWgqEhiqAAAChovwxS2"
+    argocdServerAdminPassword: "$2b$12$9Trh7b9/oj5SomedmKpNr.SOKlrkBlCPNe61BJNE65K9O.VPtKS/a"
