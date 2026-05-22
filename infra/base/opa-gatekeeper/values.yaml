@@ -30,3 +30,4 @@ exemptNamespaces:
   - ingress-nginx
   - kubernetes-dashboard
   - auth
+  - argocd

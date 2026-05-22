@@ -37,6 +37,7 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
 helm repo add dex https://charts.dexidp.io
 helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
+helm repo add argo-cd https://argoproj.github.io/argo-helm
 helm repo update
 success "Repos Helm configurés"
 
@@ -53,7 +54,10 @@ kubectl rollout status deployment -n gatekeeper-system gatekeeper-audit --timeou
 log "Attente Dex + oauth2-proxy..."
 kubectl rollout status deployment -n auth dex --timeout=120s
 kubectl rollout status deployment -n auth oauth2-proxy --timeout=120s
-success "Infrastructure déployée (nginx, monitoring, dashboard, OPA Gatekeeper, Dex + oauth2-proxy)"
+log "Attente ArgoCD..."
+kubectl rollout status deployment -n argocd argocd-server --timeout=180s
+kubectl rollout status deployment -n argocd argocd-repo-server --timeout=180s
+success "Infrastructure déployée (nginx, monitoring, dashboard, OPA Gatekeeper, Dex + oauth2-proxy, ArgoCD)"
 
 # ─── 5. Application (via Kustomize + Helm) ───────────────────────────────────
 log "Déploiement de l'application via Kustomize (env: $ENV)..."
@@ -74,4 +78,5 @@ echo ""
 echo "  App       : http://app.kubequest.local"
 echo "  Dashboard : http://dashboard.kubequest.local"
 echo "  Grafana   : http://grafana.kubequest.local"
+echo "  ArgoCD    : http://argocd.kubequest.local"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

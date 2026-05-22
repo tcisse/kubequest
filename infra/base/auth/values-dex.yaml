@@ -31,6 +31,11 @@ config:
         - "http://grafana.kubequest.local/oauth2/callback"
         - "http://dashboard.kubequest.local/oauth2/callback"
         - "http://app.kubequest.local/oauth2/callback"
+    - id: argocd
+      name: "ArgoCD"
+      secret: kubequest-argocd-secret
+      redirectURIs:
+        - "http://argocd.kubequest.local/auth/callback"
 
   # Utilisateurs de demo
   enablePasswordDB: true

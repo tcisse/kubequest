@@ -7,3 +7,4 @@ resources:
   - monitoring/
   - opa-gatekeeper/
   - auth/
+  - argocd/

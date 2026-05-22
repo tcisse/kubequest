@@ -1,0 +1,108 @@
+# ArgoCD — GitOps Continuous Delivery
+# https://argoproj.github.io/argo-helm
+
+# ─── Global ───────────────────────────────────────────────────────────────────
+global:
+  domain: argocd.kubequest.local
+
+# ─── Server ───────────────────────────────────────────────────────────────────
+server:
+  replicas: 1
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    hosts:
+      - argocd.kubequest.local
+    tls: []
+
+  # Desactiver TLS interne pour simplifier (nginx gere le SSL termination)
+  extraArgs:
+    - --insecure
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ─── Repo Server ──────────────────────────────────────────────────────────────
+repoServer:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ─── Application Controller ──────────────────────────────────────────────────
+controller:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# ─── Redis ────────────────────────────────────────────────────────────────────
+redis:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# ─── Notifications (desactive pour la demo) ───────────────────────────────────
+notifications:
+  enabled: false
+
+# ─── ApplicationSet (desactive pour la demo) ──────────────────────────────────
+applicationSet:
+  enabled: false
+
+# ─── Dex integre desactive (on utilise notre propre Dex) ──────────────────────
+dex:
+  enabled: false
+
+# ─── Config ───────────────────────────────────────────────────────────────────
+configs:
+  params:
+    # Permettre l'acces HTTP (derriere nginx)
+    server.insecure: true
+
+  cm:
+    # URL externe
+    url: http://argocd.kubequest.local
+
+    # OIDC via Dex existant
+    oidc.config: |
+      name: Dex
+      issuer: http://dex.kubequest.local
+      clientID: argocd
+      clientSecret: kubequest-argocd-secret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+
+  rbac:
+    # Politique RBAC : admin@kubequest.local est admin
+    policy.csv: |
+      g, admin@kubequest.local, role:admin
+      g, viewer@kubequest.local, role:readonly
+    policy.default: role:readonly
+
+  secret:
+    # Mot de passe admin ArgoCD (bcrypt de "kubequest-admin")
+    argocdServerAdminPassword: "$2a$12$4K/VkmDd1pr1Mvbbpe/S5OvUdJlAzDewyePWgqEhiqAAAChovwxS2"

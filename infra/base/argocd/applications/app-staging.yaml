@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubequest-app-staging
+  namespace: argocd
+  labels:
+    project: kubequest
+    component: app
+    environment: staging
+spec:
+  project: kubequest
+  source:
+    repoURL: https://github.com/tcisse/kubequest.git
+    targetRevision: main
+    path: app/kustomize/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubequest-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubequest-app-production
+  namespace: argocd
+  labels:
+    project: kubequest
+    component: app
+    environment: production
+spec:
+  project: kubequest
+  source:
+    repoURL: https://github.com/tcisse/kubequest.git
+    targetRevision: main
+    path: app/kustomize/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubequest-production
+  syncPolicy:
+    # Production : sync manuelle pour securite
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kubequest
+  namespace: argocd
+  labels:
+    project: kubequest
+spec:
+  description: KubeQuest — projet principal
+  sourceRepos:
+    - "https://github.com/tcisse/kubequest.git"
+  destinations:
+    # Autoriser le deploiement dans tous les namespaces du cluster
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: NetworkPolicy
