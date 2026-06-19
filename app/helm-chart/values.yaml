@@ -91,6 +91,12 @@ secrets:
 # ─── MySQL (chart Bitnami) ────────────────────────────────────────────────────
 mysql:
   enabled: true
+  # Bitnami a retire ses images versionnees de docker.io/bitnami en 2025.
+  # Les tags sont desormais heberges dans le repo bitnamilegacy.
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/mysql
+    tag: 8.0.36-debian-12-r8
   auth:
     database: app_database
     username: app_user
