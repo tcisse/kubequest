@@ -1,0 +1,73 @@
+name: CI/CD - Build and Deploy
+
+# Pipeline GitOps :
+#   push code Laravel -> build image ARM64 -> push Docker Hub (tag = commit SHA)
+#   -> bump du tag dans les manifests Kustomize -> ArgoCD synchronise -> rolling update
+#
+# Secrets requis (Settings -> Secrets and variables -> Actions) :
+#   DOCKERHUB_USER   : login Docker Hub
+#   DOCKERHUB_TOKEN  : access token Docker Hub (pas le mot de passe)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sample-app-master/**'      # ne se declenche que si le CODE change
+  workflow_dispatch: {}              # permet un lancement manuel
+
+permissions:
+  contents: write                    # necessaire pour committer le bump de tag
+
+env:
+  IMAGE: cissetaher/kubequest-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # QEMU : indispensable pour builder en arm64 sur un runner amd64
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build ARM64 (noeuds Graviton/aarch64) et push avec un tag immuable = commit SHA
+      - name: Build and push image (ARM64)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./sample-app-master
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Bump du tag dans les overlays GitOps (yq est preinstalle sur ubuntu-latest)
+      # On passe par $GITHUB_SHA (variable d'env integree) plutot que ${{ github.sha }}
+      # dans le run, pour ne jamais interpoler d'expression dans le shell.
+      - name: Update image tag in GitOps manifests
+        run: |
+          yq -i '.app.image.tag = strenv(GITHUB_SHA)' app/kustomize/overlays/staging/values.yaml
+          yq -i '.app.image.tag = strenv(GITHUB_SHA)' app/kustomize/overlays/production/values.yaml
+
+      # Commit du nouveau tag. [skip ci] + filtre 'paths' evitent toute boucle.
+      - name: Commit and push tag bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/kustomize/overlays/staging/values.yaml \
+                  app/kustomize/overlays/production/values.yaml
+          git commit -m "ci: deploy ${GITHUB_SHA} [skip ci]" || {
+            echo "Aucun changement de tag a committer"; exit 0;
+          }
+          git push origin HEAD:main
