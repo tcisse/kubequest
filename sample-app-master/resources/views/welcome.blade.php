@@ -6,7 +6,7 @@
         crossorigin="anonymous"></script>
     </head>
     <body>
-        <h1>Hello world sample app</h1>
+        <h1>Hello world app</h1>
         <p>Counter :<p id="value">{{ $value }}</p></p>
         <button id="add">+1</button>
 
