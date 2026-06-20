@@ -3,18 +3,15 @@ app:
   name: kubequest-app
   image:
     repository: cissetaher/kubequest-app
-    tag: "latest"
+    tag: "f3df2eb100ec3505ba55b5b586abd588eba9215b"
     pullPolicy: Always
-
   replicaCount: 1
-
   env:
     APP_ENV: staging
     APP_DEBUG: "true"
     APP_URL: "http://app.staging.kubequest.local"
     DB_CONNECTION: mysql
     DB_PORT: "3306"
-
   resources:
     requests:
       cpu: 100m
@@ -22,7 +19,6 @@ app:
     limits:
       cpu: 500m
       memory: 512Mi
-
   livenessProbe:
     httpGet:
       path: /health
@@ -30,7 +26,6 @@ app:
     initialDelaySeconds: 30
     periodSeconds: 10
     failureThreshold: 3
-
   readinessProbe:
     httpGet:
       path: /health
@@ -38,7 +33,6 @@ app:
     initialDelaySeconds: 10
     periodSeconds: 5
     failureThreshold: 3
-
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
       - weight: 100
@@ -50,13 +44,11 @@ app:
                 values:
                   - kubequest-app
           topologyKey: kubernetes.io/hostname
-
 # ─── Service ──────────────────────────────────────────────────────────────────
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
-
 # ─── Ingress ──────────────────────────────────────────────────────────────────
 ingress:
   enabled: true
@@ -65,7 +57,6 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   tls: []
-
 # ─── HPA — Autoscaling (reduit en staging) ───────────────────────────────────
 autoscaling:
   enabled: true
@@ -73,13 +64,11 @@ autoscaling:
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
-
 # ─── Secrets (valeurs de demo) ────────────────────────────────────────────────
 secrets:
   appKey: "base64:DJYTvaRkEZ/YcQsX3TMpB0iCjgme2rhlIOus9A1hnj4="
   dbPassword: "app_password"
   dbRootPassword: "app_root_password"
-
 # ─── MySQL (chart Bitnami) ────────────────────────────────────────────────────
 mysql:
   enabled: true
@@ -87,7 +76,6 @@ mysql:
     database: app_database
     username: app_user
     existingSecret: kubequest-app-secrets
-
   primary:
     resources:
       requests:
@@ -99,10 +87,8 @@ mysql:
     persistence:
       enabled: true
       size: 2Gi
-
   backup:
     enabled: true
-
 # ─── Labels standardises ─────────────────────────────────────────────────────
 commonLabels:
   project: kubequest
