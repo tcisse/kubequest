@@ -53,7 +53,8 @@ service:
 ingress:
   enabled: true
   className: nginx
-  host: app.kubequest.local
+  # host: app.kubequest.local
+  host: cisse.kubequest.local
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   tls: []
