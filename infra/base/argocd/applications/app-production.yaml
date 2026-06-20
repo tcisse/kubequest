@@ -11,13 +11,14 @@ spec:
   project: kubequest
   source:
     repoURL: https://github.com/tcisse/kubequest.git
-    targetRevision: main
+    # Production suit la branche prod (promotion par merge main -> prod)
+    targetRevision: prod
     path: app/kustomize/overlays/production
   destination:
     server: https://kubernetes.default.svc
     namespace: kubequest-production
   syncPolicy:
-    # Production : sync manuelle pour securite
+    # Production : sync MANUELLE (gate humain). La branche prod est le gate de promotion.
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
