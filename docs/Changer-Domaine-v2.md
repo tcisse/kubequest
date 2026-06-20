@@ -65,7 +65,7 @@ git push origin main
 
 ```bash
 sudo sed -i '' '/kubequest.local/d' /etc/hosts
-sudo sh -c 'echo "52.211.176.178  app2.kubequest.local grafana.kubequest.local dashboard.kubequest.local argocd.kubequest.local" >> /etc/hosts'
+sudo sh -c 'echo "52.211.176.178 cisse.kubequest.local app2.kubequest.local grafana.kubequest.local dashboard.kubequest.local argocd.kubequest.local" >> /etc/hosts'
 ```
 
 > `52.211.176.178` = Elastic IP de kube-1 (stable, ne change pas au reboot).
