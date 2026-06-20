@@ -63,6 +63,10 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            # APP_URL derive automatiquement du host de l'ingress.
+            # => le domaine se change a UN SEUL endroit : ingress.host
+            - name: APP_URL
+              value: "{{ if .Values.ingress.tls }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}"
             - name: DB_HOST
               value: "{{ .Release.Name }}-mysql"
             - name: DB_DATABASE

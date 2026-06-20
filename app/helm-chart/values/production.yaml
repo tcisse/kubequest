@@ -6,7 +6,7 @@ app:
   env:
     APP_ENV: production
     APP_DEBUG: "false"
-    APP_URL: "https://app.kubequest.local"
+    # APP_URL derive de ingress.host (voir helm-chart/templates/deployment.yaml)
 
 autoscaling:
   minReplicas: 3

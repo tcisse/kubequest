@@ -4,7 +4,7 @@ app:
   env:
     APP_ENV: staging
     APP_DEBUG: "true"
-    APP_URL: "http://app.staging.kubequest.local"
+    # APP_URL derive de ingress.host (voir helm-chart/templates/deployment.yaml)
 
 autoscaling:
   minReplicas: 1
