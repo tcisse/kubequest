@@ -9,7 +9,7 @@ app:
   env:
     APP_ENV: production
     APP_DEBUG: "false"
-    APP_URL: "http://app2.kubequest.local"
+    # APP_URL derive de ingress.host (voir helm-chart/templates/deployment.yaml)
     DB_CONNECTION: mysql
     DB_PORT: "3306"
   resources:
