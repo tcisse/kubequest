@@ -1,8 +1,17 @@
 name: CI/CD - Build and Deploy
 
 # Pipeline GitOps :
-#   push code Laravel -> build image ARM64 -> push Docker Hub (tag = commit SHA)
-#   -> bump du tag dans les manifests Kustomize -> ArgoCD synchronise -> rolling update
+#   push code Laravel sur main -> build image ARM64 -> push Docker Hub (tag = commit SHA)
+#   -> bump du tag dans les overlays staging ET production -> commit sur main
+#
+# Modele de branches / deploiement :
+#   - Ce workflow ne se declenche QUE sur 'main' (jamais sur 'prod').
+#   - STAGING suit 'main' en auto-sync ArgoCD => deploie le nouveau SHA automatiquement.
+#   - PRODUCTION suit la branche 'prod' en sync MANUELLE (gate humain).
+#       Le tag production est bumpe sur main mais n'atteint la prod QUE via la promotion :
+#       merge main -> prod, puis SYNC manuel dans ArgoCD.
+#   - On bumpe les DEUX overlays sur main pour que le merge main->prod porte le tag prod.
+#     (si on ne bumpait que staging, la promotion ne porterait aucun nouveau tag prod.)
 #
 # Secrets requis (Settings -> Secrets and variables -> Actions) :
 #   DOCKERHUB_USER   : login Docker Hub
@@ -52,7 +61,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Bump du tag dans les overlays GitOps (yq est preinstalle sur ubuntu-latest)
+      # Bump du tag dans les DEUX overlays (yq est preinstalle sur ubuntu-latest).
+      # staging : deploie tout de suite (auto-sync sur main).
+      # production : le tag attend la promotion (merge main->prod) + sync manuel.
       # On passe par $GITHUB_SHA (variable d'env integree) plutot que ${{ github.sha }}
       # dans le run, pour ne jamais interpoler d'expression dans le shell.
       - name: Update image tag in GitOps manifests
