@@ -3,7 +3,7 @@ app:
   name: kubequest-app
   image:
     repository: cissetaher/kubequest-app
-    tag: "f3df2eb100ec3505ba55b5b586abd588eba9215b"
+    tag: "1f1fe072583ec6092b608066461a7087c9b13653"
     pullPolicy: Always
   replicaCount: 1
   env:
