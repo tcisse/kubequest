@@ -9,11 +9,18 @@
         <h1>Hello world app</h1>
         <p>Counter :<p id="value">{{ $value }}</p></p>
         <button id="add">+1</button>
+        <button id="reset">Reset</button>
 
         <script>
             $(document).ready(function(){
                 $("#add").click(function(e){
                     $.get("/api/counter/add", function(data){
+                        $('#value').text(data.value);
+                    });
+                });
+
+                $("#reset").click(function(e){
+                    $.get("/api/counter/reset", function(data){
                         $('#value').text(data.value);
                     });
                 });

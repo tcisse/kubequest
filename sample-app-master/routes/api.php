@@ -17,4 +17,5 @@ use Illuminate\Support\Facades\Route;
 
 
 $router->get('counter/add', [CounterController::class, 'add']);
+$router->get('counter/reset', [CounterController::class, 'reset']);
 $router->get('counter/count', [CounterController::class, 'get']);

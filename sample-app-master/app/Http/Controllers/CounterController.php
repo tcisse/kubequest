@@ -15,6 +15,14 @@ class CounterController extends Controller
         return response()->json(["value" => $value], 200);
     }
 
+    public function reset()
+    {
+        Counter::query()->delete();
+        $value = Counter::sum('count');
+
+        return response()->json(["value" => $value], 200);
+    }
+
     public function get()
     {
         $value = Counter::sum('count');

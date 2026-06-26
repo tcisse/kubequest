@@ -43,4 +43,20 @@ class CounterTest extends TestCase
 
         $response->assertJsonStructure(['value']);
     }
+
+    /** @test */
+    public function resetCounter()
+    {
+        $response = $this->get('/api/counter/reset');
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function resetCounterValue()
+    {
+        $response = $this->get('/api/counter/reset');
+
+        $response->assertJsonStructure(['value']);
+    }
 }
